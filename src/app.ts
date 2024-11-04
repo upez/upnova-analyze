@@ -9,6 +9,9 @@ const upload = multer({ dest: 'uploads/' });
 
 app.use(bodyParser.json());
 
+// Serve static files from the "public" directory
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Helper functions
 function isNotShippingProtection(item: any): boolean {
     const product = item.node?.product;
@@ -118,14 +121,6 @@ app.post('/upload-json', upload.array('jsonFiles'), (req: Request, res: Response
     fs.writeFileSync(mergedFilePath, JSON.stringify(mergedData, null, 2));
 
     res.download(mergedFilePath, 'merged.json');
-});
-
-app.get('/', (req: Request, res: Response) => {
-    res.sendFile(path.join(__dirname, '../index.html'));
-});
-
-app.get('/merge', (req: Request, res: Response) => {
-    res.sendFile(path.join(__dirname, '../merge.html'));
 });
 
 const PORT = process.env.PORT || 5001;
