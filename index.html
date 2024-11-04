@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload JSON and Display Charts</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        canvas {
+            max-width: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload JSON File</h1>
+    <form id="uploadForm">
+        <input type="file" id="fileInput" accept=".json" required>
+        <button type="submit">Upload</button>
+    </form>
+    <div id="response"></div>
+
+    <h2>Order Sizes</h2>
+    <canvas id="orderSizesChart"></canvas>
+
+    <h2>Price Ranges</h2>
+    <canvas id="priceRangesChart"></canvas>
+
+    <h2>Product Categories</h2>
+    <canvas id="productCategoriesChart"></canvas>
+
+    <h2>Product Types</h2>
+    <canvas id="productTypesChart"></canvas>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('response').innerText = data.error;
+                } else {
+                    document.getElementById('response').innerText = 'File successfully uploaded';
+                    renderCharts(data);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+
+        function renderCharts(data) {
+            const colors = ['#cbf09c', '#a0d68b', '#7c9f5e', '#d3d3d3', '#f4a261', '#e76f51', '#2a9d8f', '#264653'];
+
+            const orderSizesCtx = document.getElementById('orderSizesChart').getContext('2d');
+            new Chart(orderSizesCtx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(data.order_sizes),
+                    datasets: [{
+                        data: Object.values(data.order_sizes),
+                        backgroundColor: colors.slice(0, Object.keys(data.order_sizes).length)
+                    }]
+                },
+                options: {
+                    title: {
+                        display: true,
+                        text: 'Order Sizes'
+                    }
+                }
+            });
+
+            const priceRangesCtx = document.getElementById('priceRangesChart').getContext('2d');
+            const priceRangesData = Object.entries(data.price_ranges).sort(([a], [b]) => {
+                const getRangeStart = (range) => parseInt(range.split('-')[0].replace('$', ''));
+                return getRangeStart(a) - getRangeStart(b);
+            });
+            new Chart(priceRangesCtx, {
+                type: 'bar',
+                data: {
+                    labels: priceRangesData.map(([label]) => label),
+                    datasets: [{
+                        data: priceRangesData.map(([, value]) => value),
+                        backgroundColor: colors.slice(0, priceRangesData.length)
+                    }]
+                },
+                options: {
+                    title: {
+                        display: true,
+                        text: 'Price Ranges'
+                    }
+                }
+            });
+
+            const productCategoriesCtx = document.getElementById('productCategoriesChart').getContext('2d');
+            new Chart(productCategoriesCtx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(data.product_categories),
+                    datasets: [{
+                        data: Object.values(data.product_categories),
+                        backgroundColor: colors.slice(0, Object.keys(data.product_categories).length)
+                    }]
+                },
+                options: {
+                    title: {
+                        display: true,
+                        text: 'Product Categories'
+                    }
+                }
+            });
+
+            const productTypesCtx = document.getElementById('productTypesChart').getContext('2d');
+            new Chart(productTypesCtx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(data.product_types),
+                    datasets: [{
+                        data: Object.values(data.product_types),
+                        backgroundColor: colors.slice(0, Object.keys(data.product_types).length)
+                    }]
+                },
+                options: {
+                    title: {
+                        display: true,
+                        text: 'Product Types'
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html> 

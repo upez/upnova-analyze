@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merge JSON Files</title>
+</head>
+<body>
+    <h1>Merge JSON Files</h1>
+    <form id="mergeForm" enctype="multipart/form-data">
+        <input type="file" id="jsonFiles" name="jsonFiles" multiple accept=".json">
+        <button type="submit">Upload and Merge</button>
+    </form>
+
+    <script>
+        document.getElementById('mergeForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData();
+            const files = document.getElementById('jsonFiles').files;
+
+            for (let i = 0; i < files.length; i++) {
+                formData.append('jsonFiles', files[i]);
+            }
+
+            const response = await fetch('/upload-json', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'merged.json';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            } else {
+                console.error('Failed to upload files');
+            }
+        });
+    </script>
+</body>
+</html> 
