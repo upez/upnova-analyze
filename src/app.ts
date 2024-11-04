@@ -5,7 +5,7 @@ import fs from 'fs';
 import path from 'path';
 
 const app = express();
-const upload = multer({ dest: 'uploads/' });
+const upload = multer({ dest: './public/uploads/' });
 
 app.use(bodyParser.json());
 
